@@ -104,7 +104,6 @@ public class Character : MonoBehaviour
         // finally, Move the character
         controller.Move(moveVelocity * Time.deltaTime);
 
-
         // rotate the character using Quaternion LookRotation()
         // slerp = Spherical Linear Interpolation. smoothly interpolates between Quaternion rotations
         Vector3 horizontalVelocity = new Vector3(moveVelocity.x, 0f, moveVelocity.z);

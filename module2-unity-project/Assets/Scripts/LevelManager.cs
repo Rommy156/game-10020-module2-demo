@@ -9,6 +9,14 @@ public class LevelManager : MonoBehaviour
     public WallEye wallEye;
     public Door door;
 
+    public Pumpkin pumpkinPrefab;
+
+    public Pumpkin pumpkin1;
+    public Pumpkin pumpkin2;
+
+    public UIManager uiManager;
+    public InventoryManager inventoryManager;
+
     // the level manager is responsible for connecting the core game system events
     // notice that these events have arguments - it's not possible to pass arguments to
     // events in Unity when using the Editor (what we did in Module 1)
@@ -24,10 +32,28 @@ public class LevelManager : MonoBehaviour
 
         toggle1.OnToggle.AddListener(wallEye.OpenClose);
 
-        wallEye.OnEyeStateChanged.AddListener(lockDoor);
+        wallEye.OnEyeStateChanged.AddListener(LockDoor);
+
+        // inventory events
+        pumpkin1.OnInventoryCollect.AddListener(inventoryManager.PickUpInventory);
+        pumpkin2.OnInventoryCollect.AddListener(inventoryManager.PickUpInventory);
+        
+        inventoryManager.OnInventoryChanged.AddListener(uiManager.UpdateInventoryUI);
     }
 
-    void lockDoor(WallEyeState eyeState)
+    public void DropPumpkin()
+    {
+        if (inventoryManager.inventory[InventoryItem.Pumpkin] > 0)
+        {
+            inventoryManager.DropInventory(InventoryItem.Pumpkin);
+
+            Pumpkin newPumpkin = Instantiate(pumpkinPrefab);
+            newPumpkin.transform.position = new Vector3(-3, 0, -1);
+            newPumpkin.OnInventoryCollect.AddListener(inventoryManager.PickUpInventory);
+        }
+    }
+
+    void LockDoor(WallEyeState eyeState)
     {
         if (eyeState == WallEyeState.Defeated)
         {
@@ -38,4 +64,5 @@ public class LevelManager : MonoBehaviour
             door.SetLock(true);
         }
     }
+    
 }
