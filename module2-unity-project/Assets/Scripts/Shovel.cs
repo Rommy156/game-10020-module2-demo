@@ -24,8 +24,8 @@ public class Shovel : MonoBehaviour
     {
         if (other.GetComponent<IHittable>() != null)
         {
-            IHittable toggle = other.GetComponent<IHittable>();
-            toggle.Hit(gameObject);
+            IHittable hittableObject = other.GetComponent<IHittable>();
+            hittableObject.Hit(gameObject);
         }
     }
 }

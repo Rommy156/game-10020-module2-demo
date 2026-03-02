@@ -4,5 +4,5 @@ using UnityEngine;
 // this interface *must* implement a Hit() method
 public interface IHittable
 {
-    public void Hit(GameObject gameObject);
+    public void Hit(GameObject otherGameObject);
 }
