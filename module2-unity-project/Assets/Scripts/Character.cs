@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.InputSystem;
 
 public class Character : MonoBehaviour
@@ -20,6 +21,15 @@ public class Character : MonoBehaviour
     public InputActionReference moveInput;
     public InputActionReference attackInput;
     public InputActionReference weaponSwitchInput;
+    public InputActionReference dropInventoryInput;
+    public InputActionReference showInventoryInput;
+
+    [HideInInspector]
+    public UnityEvent OnItemDropped;
+
+    [HideInInspector]
+    public UnityEvent<bool> OnInventoryShown;
+
     public Shovel shovel;
 
     public Rock rock;
@@ -29,9 +39,12 @@ public class Character : MonoBehaviour
     bool shortRangeAttack = true;
     bool startRockSpawn = false;
     float rockTimer = 0.0f;
+    bool showInventory = false;
 
     void Awake()
     {
+        if (OnItemDropped == null) OnItemDropped = new UnityEvent();
+
         controller = GetComponent<CharacterController>();
         animator = GetComponent<Animator>();
 
@@ -39,6 +52,31 @@ public class Character : MonoBehaviour
         shovelCollider.enabled = false;
 
         shortRangeAttack = true;
+
+        // this is a C# delegate. we use += to add a listener to a delegate
+        dropInventoryInput.action.performed += DropInventoryPerformed;
+
+        showInventoryInput.action.performed += ShowInventoryPerformed;
+        showInventoryInput.action.canceled += ShowInventoryCanceled;
+    }
+
+    private void ShowInventoryCanceled(InputAction.CallbackContext obj)
+    {
+        showInventory = false;
+        OnInventoryShown.Invoke(showInventory);
+    }
+
+    private void ShowInventoryPerformed(InputAction.CallbackContext obj)
+    {
+        showInventory = true;
+        OnInventoryShown.Invoke(showInventory);
+    }
+
+    private void DropInventoryPerformed(InputAction.CallbackContext obj)
+    {
+        // should you be able to drop inventory with the inventory panel open?
+        // yes
+        OnItemDropped.Invoke();
     }
 
     private void Start()
@@ -48,10 +86,12 @@ public class Character : MonoBehaviour
 
     private void Update()
     {
-        PlayerMotion();
+        bool inputEnabled = !showInventory;
+
+        PlayerMotion(inputEnabled);
 
         bool attack = attackInput.action.WasPressedThisFrame();
-        if (attack)
+        if (attack && inputEnabled)
         {
             if (shortRangeAttack)
             {
@@ -70,7 +110,7 @@ public class Character : MonoBehaviour
         }
 
         bool weaponSwitch = weaponSwitchInput.action.WasPressedThisFrame();
-        if (weaponSwitch)
+        if (weaponSwitch && inputEnabled)
         {
             shortRangeAttack = !shortRangeAttack;
             UpdateWeapon();
@@ -80,10 +120,12 @@ public class Character : MonoBehaviour
         if (startRockSpawn) SpawnRockDelay();
     }
 
-    void PlayerMotion()
+    void PlayerMotion(bool inputEnabled)
     {
+        if (!inputEnabled) return;
+
         // the following is pretty standard character controller code
-        
+
         // snap the player to the ground if already grounded
         // when jumping, gravity takes over
         if (controller.isGrounded && velocity.y < 0)
