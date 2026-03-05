@@ -18,8 +18,10 @@ public class LevelManager : MonoBehaviour
     public GameObject inventoryItems;
 
     [Header("Prefabs")]
-    public Inventory pumpkinPrefab;
+    public Inventory coinPrefab;
     public Inventory lanternPrefab;
+    public Inventory chestPrefab;
+
 
     // the level manager is responsible for connecting the core game system events
     // notice that these events have arguments - it's not possible to pass arguments to
@@ -69,7 +71,7 @@ public class LevelManager : MonoBehaviour
 
     void LockDoorInventory()
     {
-        if (inventoryManager.inventory[InventoryItem.Lantern] > 0)
+        if (inventoryManager.inventory[InventoryItem.Chest] > 0)
         {
             door.SetLock(false);
         }
@@ -83,11 +85,14 @@ public class LevelManager : MonoBehaviour
     {
         switch (item)
         {
-            case InventoryItem.Pumpkin:
-                PlaceInventory(pumpkinPrefab);
+            case InventoryItem.Chest:
+                PlaceInventory(chestPrefab);
                 break;
             case InventoryItem.Lantern:
                 PlaceInventory(lanternPrefab);
+                break;
+            case InventoryItem.Coin:
+                PlaceInventory(coinPrefab);
                 break;
         }
     }
@@ -99,6 +104,8 @@ public class LevelManager : MonoBehaviour
 
         // drop the new inventory item at the player position and a little
         // bit in front of it the player
-        inventory.transform.position = character.transform.position + character.transform.forward;
+        inventory.transform.position = character.transform.position + character.transform.forward * 1.0f;
     }
+    
+   
 }

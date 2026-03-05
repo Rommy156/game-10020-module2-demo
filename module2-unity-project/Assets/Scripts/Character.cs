@@ -1,8 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class Character : MonoBehaviour
@@ -43,7 +43,14 @@ public class Character : MonoBehaviour
 
     void Awake()
     {
-        if (OnItemDropped == null) OnItemDropped = new UnityEvent();
+        if (OnInventoryShown == null)
+        {
+            OnInventoryShown = new UnityEvent<bool>();
+        }
+        if (OnItemDropped == null)
+        {
+            OnItemDropped = new UnityEvent();
+        }
 
         controller = GetComponent<CharacterController>();
         animator = GetComponent<Animator>();
@@ -65,7 +72,6 @@ public class Character : MonoBehaviour
         showInventory = false;
         OnInventoryShown.Invoke(showInventory);
     }
-
     private void ShowInventoryPerformed(InputAction.CallbackContext obj)
     {
         showInventory = true;

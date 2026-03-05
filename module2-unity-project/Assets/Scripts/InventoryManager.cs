@@ -16,30 +16,33 @@ public class InventoryManager : MonoBehaviour
 
     public Dictionary<InventoryItem, int> inventory = new Dictionary<InventoryItem, int>();
 
-    public InventoryItem activeItem = InventoryItem.Pumpkin;
+    public InventoryItem activeItem = InventoryItem.Coin;
+
     public void Awake()
     {
         if (OnInventoryChanged == null)
+        {
             OnInventoryChanged = new UnityEvent();
-        
+        }
         if (OnInventorySpawned == null)
+        {
             OnInventorySpawned = new UnityEvent<InventoryItem>();
-
+        }
         if (OnInventoryFull == null)
+        {
             OnInventoryFull = new UnityEvent();
-
-        // important step:
-        // initialize all of the inventory item keys
-        inventory[InventoryItem.Pumpkin] = 0;
+        }
+        //initialize all inventory item keys
+        inventory[InventoryItem.Chest] = 0;
         inventory[InventoryItem.Lantern] = 0;
-        inventory[InventoryItem.Coffin] = 0;
+        inventory[InventoryItem.Coin] = 0;
     }
 
     public void PickUpInventory(Inventory inventoryComponent)
     {
         // set a carry limit of 2
         if (inventory[inventoryComponent.item] < 2)
-        {
+    {
             // the key is guaranteed to exist here
             inventory[inventoryComponent.item] += 1;
             OnInventoryChanged.Invoke();
@@ -63,4 +66,6 @@ public class InventoryManager : MonoBehaviour
             OnInventorySpawned.Invoke(activeItem);
         }
     }
+
+
 }

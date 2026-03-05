@@ -5,6 +5,7 @@ using UnityEngine;
 
 public class InventoryFull : MonoBehaviour
 {
+
     Animator animator;
     private void Awake()
     {
