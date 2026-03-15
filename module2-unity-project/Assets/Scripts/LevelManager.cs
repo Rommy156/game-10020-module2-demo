@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 public class LevelManager : MonoBehaviour
@@ -16,11 +16,15 @@ public class LevelManager : MonoBehaviour
     public WallEye wallEye;
     public Door door;
     public GameObject inventoryItems;
+    public Chest chest;
 
     [Header("Prefabs")]
     public Inventory coinPrefab;
     public Inventory lanternPrefab;
     public Inventory chestPrefab;
+    public Inventory keyPrefab;
+
+    public ShopTerminal shop;
 
 
     // the level manager is responsible for connecting the core game system events
@@ -35,6 +39,36 @@ public class LevelManager : MonoBehaviour
         inventoryManager.OnInventoryChanged.AddListener(LockDoorInventory);
         inventoryManager.OnInventorySpawned.AddListener(SpawnInventory);
         inventoryManager.OnInventoryFull.AddListener(uiManager.ShowInventoryFull);
+
+        shop.OnItemPurchaseRequested.AddListener(ProcessShopPurchase);
+
+
+        void ProcessShopPurchase(InventoryItem item)
+        {
+            int cost = 1;
+
+            ShopTerminal shop = FindObjectOfType<ShopTerminal>();
+
+            if (inventoryManager.SpendCoins(cost))
+            {
+                Debug.Log("Item Purchased: " + item);
+
+                inventoryManager.inventory[item] += 1;
+
+                inventoryManager.OnInventoryChanged.Invoke();
+
+                shop.PurchaseResult(true);
+            }
+            else
+            {
+                shop.PurchaseResult(false);
+            }
+        }
+        //add listener for shop terminal purchase event
+        shop.OnPurchaseSuccess.AddListener(OnItemPurchased);
+
+        //listener for chest
+        chest.OnChestOpened.AddListener(OpenDoorFromChest);
 
         foreach (Transform child in inventoryItems.transform)
         {
@@ -55,8 +89,8 @@ public class LevelManager : MonoBehaviour
         character.OnInventoryShown.AddListener(uiManager.ShowInventory);
         character.OnItemDropped.AddListener(inventoryManager.DropInventory);
     }
-
     // we "buffer" the event with a function that has the correct arguments
+
     void LockDoorWallEye(WallEyeState eyeState)
     {
         if (eyeState == WallEyeState.Defeated)
@@ -68,10 +102,15 @@ public class LevelManager : MonoBehaviour
             door.SetLock(true);
         }
     }
+    void OpenDoorFromChest()
+    {
+
+        door.SetLock(false);
+    }
 
     void LockDoorInventory()
     {
-        if (inventoryManager.inventory[InventoryItem.Chest] > 0)
+        if (inventoryManager.inventory[InventoryItem.Chest] > 2)
         {
             door.SetLock(false);
         }
@@ -80,7 +119,12 @@ public class LevelManager : MonoBehaviour
             door.SetLock(true);
         }
     }
+    void OnItemPurchased()
+    {
+        Debug.Log("Purchase successful");
 
+        uiManager.UpdateInventoryUI();
+    }
     void SpawnInventory(InventoryItem item)
     {
         switch (item)
@@ -93,6 +137,9 @@ public class LevelManager : MonoBehaviour
                 break;
             case InventoryItem.Coin:
                 PlaceInventory(coinPrefab);
+                break;
+            case InventoryItem.Key:
+                PlaceInventory(keyPrefab);
                 break;
         }
     }

@@ -5,6 +5,8 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
 
+using static InventoryManager;
+
 public class Door : MonoBehaviour
 {
     public Sprite doorLocked;
@@ -36,6 +38,23 @@ public class Door : MonoBehaviour
         if (!lockedState && other.gameObject.CompareTag("character"))
         {
             SceneManager.LoadScene(sceneName);
+        }
+    }
+    private void OnEnable()
+    {
+        GameEvents.OnItemPurchased += UnlockDoor;
+    }
+
+    private void OnDisable()
+    {
+        GameEvents.OnItemPurchased -= UnlockDoor;
+    }
+
+    void UnlockDoor(string item)
+    {
+        if (item == "Key")
+        {
+            gameObject.SetActive(false);
         }
     }
 }

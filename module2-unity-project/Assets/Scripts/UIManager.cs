@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
+using static InventoryManager;
+
 public class UIManager : MonoBehaviour
 {
     public InventoryManager inventoryManager;
@@ -54,9 +56,24 @@ public class UIManager : MonoBehaviour
     {
         SetActiveInventory(InventoryItem.Chest);
     }
-
-    public void ShowInventoryFull()
+        public void ShowInventoryFull()
     {
         inventoryFull.ShowInventoryFull();
     }
+
+    private void OnEnable()
+    {
+        GameEvents.OnCoinsChanged += UpdateUI;
+    }
+
+    private void OnDisable()
+    {
+        GameEvents.OnCoinsChanged -= UpdateUI;
+    }
+
+    void UpdateUI(int coins)
+    {
+        coinText.text = "Coins: " + coins;
+    }
 }
+

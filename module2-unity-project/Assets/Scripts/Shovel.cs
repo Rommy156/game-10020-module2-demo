@@ -22,10 +22,19 @@ public class Shovel : MonoBehaviour
     // if it has it, simply call the Hit() method
     private void OnTriggerEnter(Collider other)
     {
-        if (other.GetComponent<IHittable>() != null)
+        Debug.Log("Hit: " + other.name);
+
+        IHittable hittable = other.GetComponent<IHittable>();
+        if (hittable != null)
         {
-            IHittable toggle = other.GetComponent<IHittable>();
-            toggle.Hit(gameObject);
+            hittable.Hit(gameObject);
+            return;
+        }
+
+        IInteractable interactable = other.GetComponentInParent<IInteractable>();
+        if (interactable != null)
+        {
+            interactable.Interact(gameObject);
         }
     }
 }

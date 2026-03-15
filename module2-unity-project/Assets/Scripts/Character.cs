@@ -7,10 +7,11 @@ using UnityEngine.InputSystem;
 
 public class Character : MonoBehaviour
 {
-    CharacterController controller;
     Vector3 velocity;
     Animator animator;
     Collider shovelCollider;
+
+    CharacterController controller;
 
     public float moveSpeed = 5.0f;
     public float gravity = -9.81f;
@@ -23,23 +24,33 @@ public class Character : MonoBehaviour
     public InputActionReference weaponSwitchInput;
     public InputActionReference dropInventoryInput;
     public InputActionReference showInventoryInput;
+    public InputActionReference showShopInput;
 
     [HideInInspector]
     public UnityEvent OnItemDropped;
+    public UnityEvent OnShopShown;
+
 
     [HideInInspector]
     public UnityEvent<bool> OnInventoryShown;
+    public UnityEvent<bool> OnInventorySpent;
 
     public Shovel shovel;
 
     public Rock rock;
-    
+
     public GameObject armRight;
+
+    public InventoryManager inventory;
 
     bool shortRangeAttack = true;
     bool startRockSpawn = false;
     float rockTimer = 0.0f;
     bool showInventory = false;
+
+    bool showShop = false;
+    bool shopOpen = false;
+    bool canOpenShop = false;
 
     void Awake()
     {
@@ -51,6 +62,10 @@ public class Character : MonoBehaviour
         {
             OnItemDropped = new UnityEvent();
         }
+        if (OnInventorySpent == null)
+        {
+            OnInventorySpent = new UnityEvent<bool>();
+        }
 
         controller = GetComponent<CharacterController>();
         animator = GetComponent<Animator>();
@@ -60,13 +75,31 @@ public class Character : MonoBehaviour
 
         shortRangeAttack = true;
 
-        // this is a C# delegate. we use += to add a listener to a delegate
-        dropInventoryInput.action.performed += DropInventoryPerformed;
 
-        showInventoryInput.action.performed += ShowInventoryPerformed;
-        showInventoryInput.action.canceled += ShowInventoryCanceled;
+        if (dropInventoryInput != null)
+            dropInventoryInput.action.performed += DropInventoryPerformed;
+
+        if (showInventoryInput != null)
+        {
+            showInventoryInput.action.performed += ShowInventoryPerformed;
+            showInventoryInput.action.canceled += ShowInventoryCanceled;
+        }
+
+        if (showShopInput != null)
+        {
+            showShopInput.action.performed += ShowShopPerformed;
+        }
     }
+    private void ShowShopPerformed(InputAction.CallbackContext obj)
+    {
+        if (!canOpenShop) return;
 
+        showShop = !showShop;
+
+        OnShopShown?.Invoke();
+
+        OnInventoryShown?.Invoke(showShop);
+    }
     private void ShowInventoryCanceled(InputAction.CallbackContext obj)
     {
         showInventory = false;
@@ -92,13 +125,21 @@ public class Character : MonoBehaviour
 
     private void Update()
     {
-        bool inputEnabled = !showInventory;
+        bool inputEnabled = !showInventory && !shopOpen;
+        bool shopInputEnabled = !showShop;
 
         PlayerMotion(inputEnabled);
 
         bool attack = attackInput.action.WasPressedThisFrame();
         if (attack && inputEnabled)
         {
+            IInteractable interactable = shovel.GetComponent<IInteractable>();
+
+            if (interactable != null)
+            {
+                interactable.Interact(gameObject);
+            }
+
             if (shortRangeAttack)
             {
                 // short range attack always works (no cooldown)
@@ -148,7 +189,7 @@ public class Character : MonoBehaviour
         velocity.y += gravity * Time.deltaTime;
 
         moveVelocity.y = velocity.y;
-        
+
         // finally, Move the character
         controller.Move(moveVelocity * Time.deltaTime);
 
@@ -180,7 +221,7 @@ public class Character : MonoBehaviour
             point2.y = 0f;
 
             Vector3 direction = (point2 - point1).normalized;
-            
+
             rock.Throw(direction, throwForce);
             rock = null;
             startRockSpawn = true;
@@ -216,11 +257,11 @@ public class Character : MonoBehaviour
     void UpdateWeapon()
     {
         shovel.gameObject.SetActive(shortRangeAttack);
-        
+
         // we need to check if rock is not null in case we have already thrown in
         // and it hasn't respawned yet
         if (rock != null) rock.gameObject.SetActive(!shortRangeAttack);
-        
+
         if (shortRangeAttack)
         {
             // disable hitbox initially in case animation player did not do it for us
@@ -241,5 +282,34 @@ public class Character : MonoBehaviour
         {
             shovel.EnableHitbox(value);
         }
+    }
+    void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Shop"))
+        {
+            canOpenShop = true;
+
+            showShop = true;
+            shopOpen = true;
+
+            OnShopShown?.Invoke();
+        }
+    }
+
+    void OnTriggerExit(Collider other)
+    {
+        if (other.CompareTag("Shop"))
+        {
+            canOpenShop = false;
+
+            showShop = false;
+            shopOpen = false;
+
+            OnShopShown?.Invoke();
+        }
+    }
+    public void SetShopState(bool state)
+    {
+        shopOpen = state;
     }
 }

@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum InventoryItem
+public interface IInventoryUser
 {
-    Chest, Coin, Lantern, Key
+    public void SpendCoins(int amount);
 }
