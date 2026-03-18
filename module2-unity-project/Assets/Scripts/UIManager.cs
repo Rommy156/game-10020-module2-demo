@@ -14,6 +14,8 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI chestText;
 
     public GameObject inventoryPanel;
+    public GameObject purchaseFailedPanel;
+    public PurchaseFailed purchaseFailed;
 
     public TextMeshProUGUI activeInventoryText;
     public InventoryFull inventoryFull;
@@ -34,7 +36,15 @@ public class UIManager : MonoBehaviour
         int chestInventory = inventoryManager.inventory[InventoryItem.Chest];
         chestText.text = $"Chests: {chestInventory}";
     }
+    public void ShowPurchasedFailed(bool show)
+    {
+        // show a message that the purchase failed
+        Debug.Log("Purchase Failed: Not enough coins");
 
+        purchaseFailedPanel.SetActive(show);
+        purchaseFailed.ShowPurchaseFailedTextPanel();
+
+    }
     public void ShowInventory(bool show)
     {
         inventoryPanel.SetActive(show);

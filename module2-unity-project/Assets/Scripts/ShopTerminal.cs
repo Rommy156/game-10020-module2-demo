@@ -6,14 +6,18 @@ public class ShopTerminal : MonoBehaviour
     public GameObject shopPanel;
     public GameObject shopMenu;
 
+    public Character player;
+
     public Transform playerLeftHand;
     public GameObject keyPrefab;
     public GameObject lanternPrefab;
 
     bool playerInTrigger = false;
 
-    public UnityEvent<InventoryItem> OnItemPurchaseRequested;
+    public UnityEvent <InventoryItem> OnItemPurchaseRequested;
+
     public UnityEvent OnPurchaseSuccess;
+    public UnityEvent OnPurchaseFailed;
 
     void Awake()
     {
@@ -56,24 +60,23 @@ public class ShopTerminal : MonoBehaviour
 
     public void BuyKey()
     {
-        SpawnKey();
         OnItemPurchaseRequested.Invoke(InventoryItem.Key);
     }
-
-    void SpawnKey()
+   
+    public void SpawnKey()
     {
-        GameObject key = Instantiate(keyPrefab, playerLeftHand);
+      { GameObject key = Instantiate(keyPrefab, playerLeftHand);
 
         key.transform.localPosition = keyPrefab.transform.localPosition;
         key.transform.localRotation = keyPrefab.transform.localRotation;
         key.transform.localScale = keyPrefab.transform.localScale;
 
-        key.tag = "Key";
+            key.tag = "Key";
+        }
     }
     public void BuyLantern()
     {
         OnItemPurchaseRequested.Invoke(InventoryItem.Lantern);
-        SpawnLantern();
     }
 
     public void SpawnLantern()
@@ -85,8 +88,6 @@ public class ShopTerminal : MonoBehaviour
         lantern.tag = "Lantern";
     }
 
-    public Character player;
-
     public void PurchaseResult(bool success)
     {
         if (success)
@@ -96,6 +97,7 @@ public class ShopTerminal : MonoBehaviour
         }
         else
         {
+            OnPurchaseFailed?.Invoke();
             Debug.Log("Purchase failed");
         }
 

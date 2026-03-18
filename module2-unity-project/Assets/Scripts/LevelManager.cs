@@ -24,7 +24,10 @@ public class LevelManager : MonoBehaviour
     public Inventory chestPrefab;
     public Inventory keyPrefab;
 
+    // reference to ShopTerminal
     public ShopTerminal shop;
+    
+    InventoryItem lastPurchasedItem;
 
 
     // the level manager is responsible for connecting the core game system events
@@ -40,21 +43,32 @@ public class LevelManager : MonoBehaviour
         inventoryManager.OnInventorySpawned.AddListener(SpawnInventory);
         inventoryManager.OnInventoryFull.AddListener(uiManager.ShowInventoryFull);
 
+        // Shop Events
+        // listener to handle purchase request
         shop.OnItemPurchaseRequested.AddListener(ProcessShopPurchase);
 
+        // add listener for shop terminal purchase event
+        shop.OnPurchaseSuccess.AddListener(OnItemPurchased);
+        shop.OnPurchaseFailed.AddListener(OnItemPurchasedFailed);
+
+        // listener to open door with chest
+        chest.OnChestOpened.AddListener(OpenDoorFromChest);
+
+
+
+        
 
         void ProcessShopPurchase(InventoryItem item)
         {
             int cost = 1;
 
-            ShopTerminal shop = FindObjectOfType<ShopTerminal>();
-
             if (inventoryManager.SpendCoins(cost))
             {
                 Debug.Log("Item Purchased: " + item);
 
-                inventoryManager.inventory[item] += 1;
+                lastPurchasedItem = item;
 
+                inventoryManager.inventory[item] += 1;
                 inventoryManager.OnInventoryChanged.Invoke();
 
                 shop.PurchaseResult(true);
@@ -64,12 +78,6 @@ public class LevelManager : MonoBehaviour
                 shop.PurchaseResult(false);
             }
         }
-        //add listener for shop terminal purchase event
-        shop.OnPurchaseSuccess.AddListener(OnItemPurchased);
-
-        //listener for chest
-        chest.OnChestOpened.AddListener(OpenDoorFromChest);
-
         foreach (Transform child in inventoryItems.transform)
         {
             Inventory inventory = child.GetComponent<Inventory>();
@@ -123,7 +131,22 @@ public class LevelManager : MonoBehaviour
     {
         Debug.Log("Purchase successful");
 
+        if (lastPurchasedItem == InventoryItem.Key)
+        {
+            shop.SpawnKey();
+        }
+        else if (lastPurchasedItem == InventoryItem.Lantern)
+        {
+            shop.SpawnLantern();
+        }
+
         uiManager.UpdateInventoryUI();
+    }
+    void OnItemPurchasedFailed()
+    {
+        // handle purchase failure (e.g., show a message to the player)
+        Debug.Log("Purchase failed: Not enough coins");
+        uiManager.ShowPurchasedFailed(true);
     }
     void SpawnInventory(InventoryItem item)
     {
